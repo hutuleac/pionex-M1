@@ -993,9 +993,10 @@
     const range   = m.gridRange;
     const poc5d   = m.poc5d  ?? 0;
     const poc14d  = m.poc14d ?? 0;
-    const cvdDelta = Math.abs(m.cvd5d ?? 0);
-    const vol5d    = Math.max(m.volume5d ?? 1, 1);
-    const cvdRatio = cvdDelta / vol5d;
+    // CVD lateralness: compare 5d delta vs 14d delta (same units). Low ratio = ranging.
+    const cvdRatio = Math.abs(m.cvd14d ?? 0) > 0
+      ? Math.abs(m.cvd5d ?? 0) / Math.abs(m.cvd14d)
+      : Math.abs(m.cvd5d ?? 0) > 0 ? 1.0 : 0.0;
     const atr      = m.atr ?? 0;
     const dcW      = m.dc20?.width ?? 0;
     const dcAtr    = atr > 0 ? dcW / atr : 99;
@@ -1628,7 +1629,7 @@
             color: a.gridFit === 'RECOMMENDED' ? theme.bull : theme.text2,
             fontSize: 12, fontWeight: 700, textAlign: 'center',
             border: `1px solid ${a.gridFit === 'RECOMMENDED' ? theme.bull + '44' : theme.border}`,
-          }}>Grid: {a.gridFit}</div>
+          }}>Neutral Grid: {a.gridFit}</div>
         </div>
       </div>
     );
@@ -1841,9 +1842,13 @@
     } : { near: false, confirmed: false, side: 'neutral' };
 
     const bias    = direction === 'LONG' ? 'bullish' : direction === 'SHORT' ? 'bearish' : 'neutral';
-    const gridFit = viability.viable
-      ? (gridScore.score >= 7.5 ? 'RECOMMENDED' : 'CAUTION')
-      : 'AVOID';
+    const gridFit = !viability.viable
+      ? 'AVOID'
+      : score < 4
+        ? 'CAUTION'
+        : gridScore.score >= 7.5
+          ? 'RECOMMENDED'
+          : 'CAUTION';
 
     return {
       sym, name: sym, price,
@@ -1915,7 +1920,7 @@
   // ── Compute grid candidates ───────────────────────────────────────────────
   function computeGridCandidates(assets, capital) {
     return assets
-      .filter(a => a._viability?.viable && (a._gridScore?.score ?? 0) >= 6)
+      .filter(a => a._viability?.viable && (a._gridScore?.score ?? 0) >= 6 && (a.score ?? 0) >= 4)
       .sort((a, b) => b._gridScore.score - a._gridScore.score)
       .slice(0, 5)
       .map(a => {
