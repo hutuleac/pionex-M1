@@ -1273,8 +1273,8 @@
   function KV({ theme, k, v, color }) {
     return (
       <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 9, color: theme.text3, fontFamily: TOKENS.font.mono, letterSpacing: 0.5, textTransform: 'uppercase' }}>{k}</div>
-        <div style={{ fontSize: 13, fontWeight: 700, color: color || theme.text, fontFamily: TOKENS.font.mono, fontVariantNumeric: 'tabular-nums' }}>{v}</div>
+        <div style={{ fontSize: 10, color: theme.text3, fontFamily: TOKENS.font.mono, letterSpacing: 0.5, textTransform: 'uppercase' }}>{k}</div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: color || theme.text, fontFamily: TOKENS.font.mono, fontVariantNumeric: 'tabular-nums' }}>{v}</div>
       </div>
     );
   }
@@ -1474,7 +1474,7 @@
                 flex: 1, padding: '8px 10px', border: 'none', borderRadius: 7,
                 background: active ? theme.surface : 'transparent',
                 color: active ? theme.text : theme.text2,
-                fontSize: 13, fontWeight: active ? 700 : 500, cursor: 'pointer',
+                fontSize: 14, fontWeight: active ? 700 : 500, cursor: 'pointer',
                 boxShadow: active ? `0 1px 2px rgba(0,0,0,0.1), inset 0 0 0 1px ${theme.border2}` : 'none',
                 transition: 'all 0.15s',
               }}>{label}</button>
@@ -1560,12 +1560,12 @@
             <AssetGlyph sym={a.sym} theme={theme} size={30} />
             <div style={{ minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontSize: 14, fontWeight: 700 }}>{a.sym}</span>
-                <span style={{ fontSize: 10, color: theme.text3, fontFamily: TOKENS.font.mono, letterSpacing: 0.4 }}>
+                <span style={{ fontSize: 15, fontWeight: 700 }}>{a.sym}</span>
+                <span style={{ fontSize: 11, color: theme.text3, fontFamily: TOKENS.font.mono, letterSpacing: 0.4 }}>
                   ${fmtPrice(a.price)}
                 </span>
               </div>
-              <div style={{ fontSize: 11, color: theme.text2, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div style={{ fontSize: 12, color: theme.text2, marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {a.setup} · <span style={{ color: theme.text3 }}>{a.regime.replace(/_/g, ' ')}</span>
               </div>
             </div>
@@ -1576,7 +1576,7 @@
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{
-              fontSize: 18, fontWeight: 700, color, letterSpacing: -0.5,
+              fontSize: 20, fontWeight: 700, color, letterSpacing: -0.5,
               fontFamily: TOKENS.font.display, fontVariantNumeric: 'tabular-nums',
             }}>{a.score.toFixed(1)}</div>
             <Score value={a.score} theme={theme} size="sm" style={{ marginTop: 2 }} />
@@ -1691,6 +1691,16 @@
                 </div>
               </div>
               <GridRangeVis theme={theme} grid={g} />
+              {g.viabilityNote && (
+                <div style={{
+                  marginTop: 8, padding: '5px 8px', borderRadius: 6,
+                  background: g.viable ? theme.warnSoft : theme.bearSoft,
+                  color: g.viable ? theme.warn : theme.bear,
+                  fontSize: 10, fontFamily: TOKENS.font.mono, letterSpacing: 0.3,
+                }}>
+                  {g.viable ? '⚠ ' : '✕ '}{g.viabilityNote}
+                </div>
+              )}
               <div style={{
                 display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10,
                 marginTop: 12, paddingTop: 10, borderTop: `1px solid ${theme.border}`,
@@ -1942,7 +1952,7 @@
   // ── Compute grid candidates ───────────────────────────────────────────────
   function computeGridCandidates(assets, capital) {
     return assets
-      .filter(a => a._viability?.viable && (a._gridScore?.score ?? 0) > 5 && (a.score ?? 0) >= 4)
+      .filter(a => (a._gridScore?.score ?? 0) > 5 && (a.score ?? 0) >= 4)
       .sort((a, b) => b._gridScore.score - a._gridScore.score)
       .map(a => {
         const range = a._gridRange ?? {};
@@ -1959,6 +1969,10 @@
           expectedDailyPct: (netPct * grids * 2 * 100).toFixed(2),
           score:     a._gridScore.score,
           rangeHigh: hi, rangeLow: lo, direction,
+          viable:    a._viability?.viable ?? true,
+          viabilityNote: a._viability?.viable === false
+            ? a._viability.reason
+            : (a._viability?.warning ?? null),
         };
       });
   }
@@ -2101,7 +2115,7 @@
   // ── App Root ──────────────────────────────────────────────────────────────
   function App() {
     const DEFAULT_TICKERS = ['BTC','BNB','SOL','SUI','TRX','DOGE','XLM','XRP','HYPE'];
-    const [mode,       setMode]       = React.useState('dark');
+    const [mode,       setMode]       = React.useState('light');
     const [showConfig, setShowConfig] = React.useState(false);
     const [tickers,    setTickers]    = React.useState(() => {
       try { return JSON.parse(localStorage.getItem('cim_tickers')) || DEFAULT_TICKERS; }
