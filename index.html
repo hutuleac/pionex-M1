@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>CIM Pro Trader</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230A0B0E'/><text x='16' y='23' font-size='20' text-anchor='middle' fill='%2300D4FF'>C</text></svg>" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -136,10 +137,10 @@
     ticker24h     : s => tryFetch(`${BINANCE_BASE}/fapi/v1/ticker/24hr?symbol=${s}`),
     premium       : s => tryFetch(`${BINANCE_BASE}/fapi/v1/premiumIndex?symbol=${s}`),
     klines        : (s,i,l) => tryFetch(`${BINANCE_BASE}/fapi/v1/klines?symbol=${s}&interval=${i}&limit=${l}`),
-    oiHist        : s => tryFetch(`${BINANCE_BASE}/futures/data/openInterestHist?symbol=${s}&period=4h&limit=${CFG.OI_LIMIT}`),
+    oiHist        : s => tryFetch(`/api/proxy?url=${encodeURIComponent(`${BINANCE_BASE}/futures/data/openInterestHist?symbol=${s}&period=4h&limit=${CFG.OI_LIMIT}`)}`),
     oiNow         : s => tryFetch(`${BINANCE_BASE}/fapi/v1/openInterest?symbol=${s}`),
-    smartMoney    : s => tryFetch(`${BINANCE_BASE}/futures/data/topLongShortAccountRatio?symbol=${s}&period=1h&limit=1`),
-    takerSentiment: s => tryFetch(`${BINANCE_BASE}/futures/data/takerBuySellVol?symbol=${s}&period=1h&limit=1`),
+    smartMoney    : s => tryFetch(`/api/proxy?url=${encodeURIComponent(`${BINANCE_BASE}/futures/data/topLongShortAccountRatio?symbol=${s}&period=1h&limit=1`)}`),
+    takerSentiment: s => tryFetch(`/api/proxy?url=${encodeURIComponent(`${BINANCE_BASE}/futures/data/takerBuySellVol?symbol=${s}&period=1h&limit=1`)}`),
     fearGreed     : () => tryFetch('https://api.alternative.me/fng/?limit=1'),
   };
 
