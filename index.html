@@ -1595,7 +1595,7 @@
           <Chip theme={theme} k="CVD" v={a.cvd} tone={a.cvd === 'ACC' ? 'bull' : a.cvd === 'DIS' ? 'bear' : 'neutral'} />
           <Chip theme={theme} k="EMA" v={a.ema ? a.ema.split('/')[0] : '—'} tone={a.ema && a.ema.includes('BULL') ? 'bull' : a.ema && a.ema.includes('BEAR') ? 'bear' : 'neutral'} />
           <Chip theme={theme} k="STRUCT" v={a.structure ? a.structure.slice(0, 4) : '—'} tone={a.structure === 'Bullish' ? 'bull' : a.structure === 'Bearish' ? 'bear' : 'neutral'} />
-          <Chip theme={theme} k="FVG" v={a.fvg?.near ? (a.fvg.confirmed ? '★' : '•') : '—'} tone={a.fvg?.side || 'neutral'} />
+          <Chip theme={theme} k="FVG" v={a.fvg?.side && a.fvg.side !== 'neutral' ? (a.fvg.near ? (a.fvg.confirmed ? '★' : '~') : a.fvg.side === 'bull' ? '▲' : '▼') : '—'} tone={a.fvg?.side || 'neutral'} />
           <Chip theme={theme} k="ATR" v={a.atr?.toFixed(2) ?? '—'} tone="neutral" />
         </div>
         <div style={{ fontSize: 10, color: theme.text3, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 6 }}>
@@ -1888,12 +1888,21 @@
   // ── Adapter: market pulse ─────────────────────────────────────────────────
   async function fetchPulseFull(tickers) {
     try {
-      const pulse = await fetchMarketPulse(tickers.map(s => s + 'USDT'));
+      const [pulse, globalData] = await Promise.allSettled([
+        fetchMarketPulse(tickers.map(s => s + 'USDT')),
+        tryFetch('https://api.coingecko.com/api/v3/global'),
+      ]);
+      const p = pulse.status === 'fulfilled' ? pulse.value : {};
+      let btcDominance = '—';
+      if (globalData.status === 'fulfilled') {
+        const d = globalData.value?.data?.market_cap_percentage?.btc;
+        if (d != null) btcDominance = d.toFixed(1) + '%';
+      }
       return {
-        fearGreed:    pulse.fg ?? { value: 50, label: 'Neutral' },
-        smartMoney:   pulse.smartMoney ?? { ratio: 1.0, bias: 'neutral' },
-        volume24h:    pulse.volume24h ? (pulse.volume24h / 1e9).toFixed(1) : '—',
-        btcDominance: '—',
+        fearGreed:    p.fg ?? { value: 50, label: 'Neutral' },
+        smartMoney:   p.smartMoney ?? { ratio: 1.0, bias: 'neutral' },
+        volume24h:    p.volume24h ? (p.volume24h / 1e9).toFixed(1) : '—',
+        btcDominance,
       };
     } catch (_) {
       return { fearGreed: { value: 50, label: 'Neutral' }, smartMoney: { ratio: 1.0, bias: 'neutral' }, volume24h: '—', btcDominance: '—' };
@@ -2112,6 +2121,15 @@
 
         const assets = tickerResults.filter(r => r.status === 'fulfilled').map(r => r.value);
         if (!assets.length) throw new Error('All ticker fetches failed — check network or API');
+
+        // VOL 24H: sum last 6×4h bars across all assets (no extra API call needed)
+        if (mp.volume24h === '—') {
+          const vol = assets.reduce((sum, a) => {
+            const bars = a._m?._df5d?.slice(-6) ?? [];
+            return sum + bars.reduce((s, b) => s + (b.Volume * b.Close), 0);
+          }, 0);
+          if (vol > 0) mp.volume24h = (vol / 1e9).toFixed(1);
+        }
 
         const cap = getGridCapital();
         window.CIM_DATA = {
