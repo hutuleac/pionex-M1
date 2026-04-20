@@ -5,46 +5,8 @@ Combines CIM Direction B UI with Pioniex v6 live engine (Binance + Bybit).
 
 **Single file. No build step. No server required** (when served from a real origin).
 
----
 
-## Deploy to Vercel (free)
-
-### One-time setup
-
-1. Install Vercel CLI (skip if already installed):
-   ```bash
-   npm i -g vercel
-   ```
-
-2. From this folder:
-   ```bash
-   vercel
-   ```
-   - Framework: **Other**
-   - Build command: *(leave blank)*
-   - Output directory: `.`
-   - Deploy: yes
-
-3. Vercel gives you a URL like `https://cim-pro-trader-xxx.vercel.app`.  
-   Open it on your iPhone — done.
-
-### Subsequent deploys
-
-```bash
-vercel --prod
-```
-
----
-
-## Local dev
-
-```bash
-npx serve -p 3000 .
-```
-
-Open `http://localhost:3000` — do not open `index.html` directly via `file://` (CORS blocks Binance/Bybit APIs).
-
----
+https://pionex-m1.vercel.app/ 
 
 ## Config (in-app)
 
@@ -57,3 +19,4 @@ Open `http://localhost:3000` — do not open `index.html` directly via `file://`
 - HYPE may fail (not listed on Binance/Bybit futures) — app skips failed tickers gracefully
 - BTC Dominance shows `—` (not available via futures APIs)
 - Babel in-browser transformer warning is harmless for local/Vercel use
+<img width="586" height="1234" alt="image" src="https://github.com/user-attachments/assets/abaacd50-7ecf-444b-a446-3c43d53b51c2" />
