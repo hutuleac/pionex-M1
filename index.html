@@ -1281,23 +1281,28 @@
 
   function GridRangeVis({ theme, grid }) {
     const lo = grid.rangeLow, hi = grid.rangeHigh;
+    const widthPct = lo > 0 ? ((hi - lo) / lo * 100).toFixed(1) : '—';
     return (
-      <div style={{ position: 'relative', height: 36, background: theme.surface2, borderRadius: 8, overflow: 'hidden', marginTop: 8 }}>
+      <div style={{ position: 'relative', height: 44, background: theme.surface2, borderRadius: 8, overflow: 'hidden', marginTop: 8 }}>
         <div style={{
-          position: 'absolute', left: '8%', right: '8%', top: '25%', bottom: '25%',
-          background: theme.accentSoft, borderRadius: 4, border: `1px solid ${theme.accent}44`,
-        }} />
-        <span style={{
-          position: 'absolute', left: '8%', top: 4, fontSize: 9,
-          color: theme.text3, fontFamily: TOKENS.font.mono,
-        }}>${lo ? fmtPrice(lo) : '—'}</span>
-        <span style={{
-          position: 'absolute', right: '8%', top: 4, fontSize: 9,
-          color: theme.text3, fontFamily: TOKENS.font.mono, textAlign: 'right',
-        }}>${hi ? fmtPrice(hi) : '—'}</span>
+          position: 'absolute', left: '5%', right: '5%', top: 0, bottom: 0,
+          background: theme.accentSoft, borderRadius: 6, border: `1px solid ${theme.accent}44`,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 10px',
+        }}>
+          <span style={{ fontSize: 10, color: theme.accent, fontFamily: TOKENS.font.mono, fontWeight: 700 }}>
+            ${lo ? fmtPrice(lo) : '—'}
+          </span>
+          <span style={{ fontSize: 9, color: theme.text3, fontFamily: TOKENS.font.mono }}>
+            {widthPct}% range
+          </span>
+          <span style={{ fontSize: 10, color: theme.accent, fontFamily: TOKENS.font.mono, fontWeight: 700 }}>
+            ${hi ? fmtPrice(hi) : '—'}
+          </span>
+        </div>
         <div style={{
-          position: 'absolute', left: '50%', top: '20%', bottom: '20%',
+          position: 'absolute', left: '50%', top: '15%', bottom: '15%',
           width: 1, background: theme.accent + '66',
+          pointerEvents: 'none',
         }} />
       </div>
     );
@@ -1661,34 +1666,42 @@
         <div style={{
           fontSize: 10, color: theme.text3, letterSpacing: 0.8, textTransform: 'uppercase',
           fontFamily: TOKENS.font.mono, marginBottom: 10,
-        }}>Active candidates · read only</div>
-        {candidates.map(g => (
-          <div key={g.sym} style={{
-            background: theme.surface, border: `1px solid ${theme.border}`,
-            borderRadius: 12, padding: 14, marginBottom: 10,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-              <AssetGlyph sym={g.sym} theme={theme} size={32} />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 700 }}>{g.sym}/USDT</div>
-                <div style={{ fontSize: 10, color: theme.text3, fontFamily: TOKENS.font.mono, letterSpacing: 0.4 }}>
-                  GRID · {g.mode.toUpperCase()} · {g.grids} LEVELS · {g.direction.toUpperCase()}
+        }}>Neutral grid candidates · score &gt;5 · read only</div>
+        {candidates.map(g => {
+          const scoreColor = g.score >= 8 ? theme.bull : g.score >= 6.5 ? theme.warn : theme.accent;
+          const scoreBorder = g.score >= 8 ? theme.bull + '55' : g.score >= 6.5 ? theme.warn + '55' : theme.accent + '44';
+          const scoreLabel  = g.score >= 8 ? 'STRONG' : g.score >= 6.5 ? 'GOOD' : 'DEVELOPING';
+          return (
+            <div key={g.sym} style={{
+              background: theme.surface, border: `1px solid ${scoreBorder}`,
+              borderRadius: 12, padding: 14, marginBottom: 10,
+              borderLeft: `3px solid ${scoreColor}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                <AssetGlyph sym={g.sym} theme={theme} size={32} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700 }}>{g.sym}/USDT</div>
+                  <div style={{ fontSize: 10, color: theme.text3, fontFamily: TOKENS.font.mono, letterSpacing: 0.4 }}>
+                    NEUTRAL · {g.mode.toUpperCase()} · {g.grids} LEVELS
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: scoreColor, fontFamily: TOKENS.font.mono }}>{g.score.toFixed(1)}</div>
+                  <div style={{ fontSize: 9, color: scoreColor, letterSpacing: 0.5, fontFamily: TOKENS.font.mono }}>{scoreLabel}</div>
                 </div>
               </div>
-              <TagPill theme={theme} tone="bull" label={`${g.score.toFixed(1)}`} size="sm" mono />
+              <GridRangeVis theme={theme} grid={g} />
+              <div style={{
+                display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10,
+                marginTop: 12, paddingTop: 10, borderTop: `1px solid ${theme.border}`,
+              }}>
+                <KV theme={theme} k="Capital" v={`$${g.capital}`} />
+                <KV theme={theme} k="Per grid" v={`+${g.netPerGridPct}%`} color={theme.bull} />
+                <KV theme={theme} k="Est/day" v={`+${g.expectedDailyPct}%`} color={theme.bull} />
+              </div>
             </div>
-            <GridRangeVis theme={theme} grid={g} />
-            <div style={{
-              display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10,
-              marginTop: 12, paddingTop: 10, borderTop: `1px solid ${theme.border}`,
-            }}>
-              <KV theme={theme} k="Capital" v={`$${g.capital}`} />
-              <KV theme={theme} k="Per grid" v={`+${g.netPerGridPct}%`} color={theme.bull} />
-              <KV theme={theme} k="Est/day" v={`+${g.expectedDailyPct}%`} color={theme.bull} />
-              <KV theme={theme} k="Score" v={g.score.toFixed(1)} color={theme.bull} />
-            </div>
-          </div>
-        ))}
+          );
+        })}
         {candidates.length === 0 && (
           <div style={{
             padding: '40px 20px', textAlign: 'center',
@@ -1929,9 +1942,8 @@
   // ── Compute grid candidates ───────────────────────────────────────────────
   function computeGridCandidates(assets, capital) {
     return assets
-      .filter(a => a._viability?.viable && (a._gridScore?.score ?? 0) >= 6 && (a.score ?? 0) >= 4)
+      .filter(a => a._viability?.viable && (a._gridScore?.score ?? 0) > 5 && (a.score ?? 0) >= 4)
       .sort((a, b) => b._gridScore.score - a._gridScore.score)
-      .slice(0, 5)
       .map(a => {
         const range = a._gridRange ?? {};
         const hi    = range.rangeHigh ?? a.price * 1.05;
